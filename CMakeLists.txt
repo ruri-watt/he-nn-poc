@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(he_nn_exploration)
+project(he_nn_poc)
 
 set(CMAKE_CXX_STANDARD 17)
 find_package(SEAL 3.6 REQUIRED)

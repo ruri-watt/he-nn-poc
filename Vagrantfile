@@ -16,7 +16,7 @@ Vagrant.configure("2") do |config|
   cmake -S. -Bbuild
   cd build
   make
-  ./he-nn-poc
+  ./he_nn_poc
   SCRIPT
 
   config.vm.provision "shell", inline: $script, privileged: false
