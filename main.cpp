@@ -61,6 +61,7 @@ int main() {
 
     encrypted_result = server.sigmoid_3(encrypted_result, SCALE, client.relin_keys());
     result = client.decrypt(encrypted_result);
+    result.resize(weights.size());
     std::cout << "Decrypted result after activation function:" << std::endl;
     std::cout << result;
     std::cout << std::endl;
