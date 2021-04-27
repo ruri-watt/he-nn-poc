@@ -20,6 +20,8 @@ public:
 
     const seal::GaloisKeys &gal_keys() const;
 
+    const seal::RelinKeys &relin_keys();
+
     seal::Ciphertext encrypt(const std::vector<double> &data, double scale);
 
     std::vector<double> decrypt(const seal::Ciphertext &data);

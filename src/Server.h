@@ -11,10 +11,11 @@ class Server {
 public:
     explicit Server();
 
-    seal::Ciphertext mul(const matrix<double> &matrix, const seal::Ciphertext &encrypted_vector, double scale,
-                         const seal::GaloisKeys &gal_keys);
-
     const seal::EncryptionParameters &params();
+
+    seal::Ciphertext mul(const matrix<double> &matrix, const seal::Ciphertext &encrypted_vector, double scale,
+                         const seal::GaloisKeys &gal_keys, const seal::RelinKeys &relin_keys);
+    seal::Ciphertext sigmoid_3(seal::Ciphertext &encrypted_vector, double scale, const seal::RelinKeys &relin_keys);
 };
 
 

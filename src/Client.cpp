@@ -15,6 +15,10 @@ const seal::GaloisKeys &Client::gal_keys() const {
     return gal_keys_;
 }
 
+const seal::RelinKeys &Client::relin_keys() {
+    return relin_keys_;
+}
+
 seal::Ciphertext Client::encrypt(const std::vector<double> &data, double scale) {
     seal::Ciphertext result;
     seal::Plaintext plaintext;

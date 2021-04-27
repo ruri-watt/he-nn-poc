@@ -34,7 +34,8 @@ int main() {
 
     seal::Ciphertext image_ciphertext = client.encrypt(image, SCALE);
 
-    seal::Ciphertext encrypted_result = server.mul(weights, image_ciphertext, SCALE, client.gal_keys());
+    seal::Ciphertext encrypted_result = server.mul(weights, image_ciphertext, SCALE, client.gal_keys(),
+                                                   client.relin_keys());
 
     std::vector<double> result = client.decrypt(encrypted_result);
     // Remove trailing zeros from result.
@@ -44,12 +45,12 @@ int main() {
     std::cout << expected_result;
     std::cout << std::endl;
 
-    std::cout << "Decrypted result:"<< std::endl;
+    std::cout << "Decrypted result:" << std::endl;
     std::cout << result;
     std::cout << std::endl;
 
     std::vector<double> error;
-    for (int i =0; i < expected_result.size(); i++) {
+    for (int i = 0; i < expected_result.size(); i++) {
         error.push_back(result[i] - expected_result[i]);
     }
 
@@ -58,6 +59,11 @@ int main() {
     std::cout << max_error;
     std::cout << std::endl;
 
+    encrypted_result = server.sigmoid_3(encrypted_result, SCALE, client.relin_keys());
+    result = client.decrypt(encrypted_result);
+    std::cout << "Decrypted result after activation function:" << std::endl;
+    std::cout << result;
+    std::cout << std::endl;
     return 0;
 }
 
