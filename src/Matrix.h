@@ -1,21 +1,16 @@
-//
-// Created by rw on 4/7/21.
-//
-
 #ifndef HE_NN_EXPLORATION_MATRIX_H
 #define HE_NN_EXPLORATION_MATRIX_H
 
 #include <array>
 #include <ostream>
 
-using namespace std;
 template<class T>
-using matrix = vector<vector<T>>;
+using matrix = std::vector<std::vector<T>>;
 
 
 template<class T>
-vector<T> operator*(const matrix<T> &a, vector<T> &b) {
-    vector<T> result;
+std::vector<T> operator*(const matrix<T> &a, std::vector<T> &b) {
+    std::vector<T> result;
     for (size_t r = 0; r < a.size(); r++) {
         if (a[0].size() != b.size()) {
             return result;
@@ -54,7 +49,7 @@ std::ostream &operator<<(std::ostream &os, const matrix<T> &matrix) {
         for (const auto val : row) {
             os << val << " ";
         }
-        os << '\n';
+        os << std::endl;
     }
     return os;
 }
