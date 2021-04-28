@@ -9,9 +9,6 @@
 const std::string IMAGE_FILE = "../image.txt";
 const std::string WEIGHTS_FILE = "../weights.txt";
 
-const double SCALE = std::pow(2, 40);
-
-
 std::ostream &operator<<(std::ostream &os, const std::vector<double> &v) {
     for (const auto d : v) {
         os << d << " ";
@@ -29,12 +26,12 @@ int main() {
 
     std::vector<double> expected_result = weights * image;
 
-    Server server;
-    Client client(server.params());
+    Server server(params_1);
+    Client client(server.params(), server.scale());
 
-    seal::Ciphertext image_ciphertext = client.encrypt(image, SCALE);
+    seal::Ciphertext image_ciphertext = client.encrypt(image);
 
-    seal::Ciphertext encrypted_result = server.mul(weights, image_ciphertext, SCALE, client.gal_keys(),
+    seal::Ciphertext encrypted_result = server.mul(weights, image_ciphertext, client.gal_keys(),
                                                    client.relin_keys());
 
     std::vector<double> result = client.decrypt(encrypted_result);
@@ -59,7 +56,7 @@ int main() {
     std::cout << max_error;
     std::cout << std::endl;
 
-    encrypted_result = server.sigmoid_3(encrypted_result, SCALE, client.relin_keys());
+    encrypted_result = server.sigmoid_3(encrypted_result, client.relin_keys());
     result = client.decrypt(encrypted_result);
     result.resize(weights.size());
     std::cout << "Decrypted result after activation function:" << std::endl;

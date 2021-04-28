@@ -1,18 +1,15 @@
 #include "Server.h"
 
-Server::Server() : params_(seal::scheme_type::ckks) {
-    size_t polyModulusDegree = 16384;
-    std::cout << "Max bit count: " << seal::CoeffModulus::MaxBitCount(16384) << std::endl;
-    std::vector<int> coeffModulusBitSizes = {60, 40, 40, 40, 40, 40, 60};
-    params_.set_poly_modulus_degree(polyModulusDegree);
-    params_.set_coeff_modulus(seal::CoeffModulus::Create(polyModulusDegree, coeffModulusBitSizes));
+Server::Server(const Params &params) : scale_(params.scale), params_(seal::scheme_type::ckks) {
+    params_.set_poly_modulus_degree(params.polyModulusDegree);
+    params_.set_coeff_modulus(seal::CoeffModulus::Create(params.polyModulusDegree, params.coeffModulusBitSizes));
 }
 
 const seal::EncryptionParameters &Server::params() {
     return params_;
 }
 
-seal::Ciphertext Server::mul(const matrix<double> &matrix, const seal::Ciphertext &encrypted_vector, double scale,
+seal::Ciphertext Server::mul(const matrix<double> &matrix, const seal::Ciphertext &encrypted_vector,
                              const seal::GaloisKeys &gal_keys, const seal::RelinKeys &relin_keys) {
     using namespace std;
     using namespace seal;
@@ -24,7 +21,7 @@ seal::Ciphertext Server::mul(const matrix<double> &matrix, const seal::Ciphertex
     // Convert matrix to Plaintext
     vector<Plaintext> matrix_plaintext(matrix.size());
     for (int i = 0; i < matrix.size(); i++) {
-        encoder.encode(matrix[i], scale, matrix_plaintext[i]);
+        encoder.encode(matrix[i], scale_, matrix_plaintext[i]);
     }
 
     // Multiply each row of the matrix with the encrypted vector (element-wise) to get a vector of ciphertexts
@@ -51,7 +48,7 @@ seal::Ciphertext Server::mul(const matrix<double> &matrix, const seal::Ciphertex
             evaluator.add_inplace(ciphertext, rotated);
         }
         // Mask ciphertext result so that the sum only appears in the diagonal positions, and sum to get a single ciphertext
-        encoder.encode(mask, scale, mask_plaintext);
+        encoder.encode(mask, scale_, mask_plaintext);
         mask[mask.size() - 1] = 0;
         mask.push_back(1);
         evaluator.mod_switch_to_inplace(mask_plaintext, ciphertext.parms_id());
@@ -65,7 +62,8 @@ seal::Ciphertext Server::mul(const matrix<double> &matrix, const seal::Ciphertex
     return result_ciphertexts[0];
 }
 
-seal::Ciphertext Server::sigmoid_3(seal::Ciphertext &encrypted_vector, double scale, const seal::RelinKeys &relin_keys) {
+seal::Ciphertext
+Server::sigmoid_3(seal::Ciphertext &encrypted_vector, const seal::RelinKeys &relin_keys) {
     // 0.5 + 1.20096(x/8) - 0.81562(x/8)^3
     using namespace seal;
     Ciphertext result;
@@ -74,10 +72,10 @@ seal::Ciphertext Server::sigmoid_3(seal::Ciphertext &encrypted_vector, double sc
     Evaluator evaluator(ctx);
 
     Plaintext one_eighth, one_half, c1, c3;
-    encoder.encode(0.125, scale,one_eighth);
-    encoder.encode(0.5, scale,one_half);
-    encoder.encode(1.20096, scale,c1);
-    encoder.encode(-0.81562, scale,c3);
+    encoder.encode(0.125, scale_, one_eighth);
+    encoder.encode(0.5, scale_, one_half);
+    encoder.encode(1.20096, scale_, c1);
+    encoder.encode(-0.81562, scale_, c3);
 
     Ciphertext x_div_8, x_div_8_sq, c1_x_div_8, c3_x_div_8, c3_x_div_8_cubed;
 
@@ -105,13 +103,17 @@ seal::Ciphertext Server::sigmoid_3(seal::Ciphertext &encrypted_vector, double sc
     evaluator.rescale_to_next_inplace(c3_x_div_8_cubed);
 
     evaluator.mod_switch_to_inplace(one_half, c1_x_div_8.parms_id());
-    c1_x_div_8.scale() = scale;
+    c1_x_div_8.scale() = scale_;
     evaluator.add_plain(c1_x_div_8, one_half, result);
 
     evaluator.mod_switch_to_inplace(result, c3_x_div_8_cubed.parms_id());
-    c3_x_div_8_cubed.scale() = scale;
+    c3_x_div_8_cubed.scale() = scale_;
     evaluator.add_inplace(result, c3_x_div_8_cubed);
 
     return result;
+}
+
+double Server::scale() const {
+    return scale_;
 }
 

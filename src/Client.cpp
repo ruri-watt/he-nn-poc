@@ -1,7 +1,8 @@
 #include "Client.h"
 
-Client::Client(const seal::EncryptionParameters &params) : seal_context_(params), keygen_(seal_context_),
-                                                           encoder_(seal_context_) {
+Client::Client(const seal::EncryptionParameters &params, double scale) : scale_(scale), seal_context_(params),
+                                                                         keygen_(seal_context_),
+                                                                         encoder_(seal_context_) {
     keygen_.create_public_key(public_key_);
     keygen_.create_relin_keys(relin_keys_);
     keygen_.create_galois_keys(gal_keys_);
@@ -19,10 +20,10 @@ const seal::RelinKeys &Client::relin_keys() {
     return relin_keys_;
 }
 
-seal::Ciphertext Client::encrypt(const std::vector<double> &data, double scale) {
+seal::Ciphertext Client::encrypt(const std::vector<double> &data) {
     seal::Ciphertext result;
     seal::Plaintext plaintext;
-    encoder_.encode(data, scale, plaintext);
+    encoder_.encode(data, scale_, plaintext);
     seal::Encryptor(seal_context_, public_key_)
             .encrypt(plaintext, result);
     return result;
